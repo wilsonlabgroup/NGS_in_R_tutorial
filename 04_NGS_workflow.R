@@ -85,3 +85,37 @@ alignment_log <- align(index = "index/hg19_chr17_index",
 # examine alignment summary
 View(alignment_log)
 
+# After alignment, we might want to 
+bam_files <- dir("aln", pattern = "*bam$", full.names = T)
+sorted_bam_prefix <- gsub("bam", "sorted", bam_files)
+sorted_bam_files <- paste0(sorted_bam_prefix, ".bam")
+sortBam(bam_files[[1]],
+        destination = sorted_bam_prefix[[1]])
+indexBam(paste0(sorted_bam_files[[1]], ".bam"))
+
+library(GenomicAlignments)
+bamfile <- "aln/RelA_chip_rep1.bam"
+alignment <- readGAlignments(bamfile)
+
+
+# Step4: peak calling -----------------------------------------------------
+
+
+# Step5: visualization -----------------------------------------------------------
+# Our aim is to visualize the genomic location around a gene, showing the gene model, ChIP-seq signal (read coverage), and peaks called
+
+# first we need to get the genomic coordinate we want to visualize. We are focusing on  gene CCL2, and 3kb upstream of its promoter.
+
+gene_range <- transcripts(src, 
+                          filter = ~symbol == "CCL2")
+upstream_3k <- flank(gene_range, width = 3000)
+plot_range <- range(c(gene_range, upstream_3k))
+seqlevels(plot_range) <- "chr17"
+
+p_gene <- autoplot(txdb, which = plot_range)
+
+p_signal <- autoplot(sorted_bam_files[[1]], which = plot_range)
+
+tks <- tracks(chip_signal = p_signal,
+              gene_model = p_gene)
+
