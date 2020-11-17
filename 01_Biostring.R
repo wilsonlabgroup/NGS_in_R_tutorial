@@ -12,7 +12,7 @@
 # package installation ----------------------------------------------------
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 
-BiocManager::install(c("Biostrings", "GenomicRanges", "GenomicFeatures", "rtracklayer", "org.Hs.eg.db","AnnotationHub","TxDb.Hsapiens.UCSC.hg19.knownGene","Organism.dplyr", "ShortRead","Rsubread"))
+BiocManager::install(c("Biostrings", "GenomicRanges", "GenomicFeatures", "rtracklayer", "org.Hs.eg.db","AnnotationHub","TxDb.Hsapiens.UCSC.hg19.knownGene","Organism.dplyr", "ShortRead","Rsubread","Gviz","mosaics"))
 
 # set working directory
 setwd("~/Dropbox/ccm_tutorial/") # set it to the downloaded "NGS_in_R" directory

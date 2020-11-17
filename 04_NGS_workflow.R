@@ -85,13 +85,19 @@ alignment_log <- align(index = "index/hg19_chr17_index",
 # examine alignment summary
 View(alignment_log)
 
-# After alignment, we might want to 
+# After alignment, we usually want to sort the bam files, create index for it so other programs can efficiently access the file content, and sometimes we might want to further filter the file, for example, keep alignments that are above a certain mapping quality, or keeping uniquely mapped reads only, for downstream analysis.
+# We can further manipulate bam files using Rsamtools
+library(Rsamtools)
+
 bam_files <- dir("aln", pattern = "*bam$", full.names = T)
 sorted_bam_prefix <- gsub("bam", "sorted", bam_files)
 sorted_bam_files <- paste0(sorted_bam_prefix, ".bam")
-sortBam(bam_files[[1]],
-        destination = sorted_bam_prefix[[1]])
-indexBam(paste0(sorted_bam_files[[1]], ".bam"))
+for (i in 1:3){
+  sortBam(bam_files[[i]],
+        destination = sorted_bam_prefix[[i]])
+}
+
+indexBam(sorted_bam_files)
 
 library(GenomicAlignments)
 bamfile <- "aln/RelA_chip_rep1.bam"
@@ -99,23 +105,92 @@ alignment <- readGAlignments(bamfile)
 
 
 # Step4: peak calling -----------------------------------------------------
+library(mosaics)
+
+# create a directory for alignment outputs
+if(!file.exists("peaks")){
+  dir.create("peaks")  
+}
+
+fragment_length <- 200
+bin_size <- 200
+
+input_file <- sorted_bam_files[[1]]
+chip_file <- sorted_bam_files[[2]]
+
+constructBins(infile = chip_file, 
+              fileFormat = "bam",
+              outfileLoc = "peaks",
+              fragLen = fragment_length,
+              binSize = bin_size)
+
+constructBins(infile = input_file, 
+              fileFormat = "bam",
+              outfileLoc = "peaks",
+              fragLen = fragment_length,
+              binSize = bin_size)
+
+
+chip_bin_count_file <- paste0("peaks/", basename(chip_file),"_fragL",fragment_length,"_bin",bin_size,".txt")
+input_bin_count_file <- paste0("peaks/", basename(input_file),"_fragL",fragment_length,"_bin",bin_size,".txt") 
+
+bin_count <- readBins(type = c("chip", "input"), fileName = c(chip_bin_count_file, input_bin_count_file))
+
+fit <- mosaicsFit(bin_count, analysisType = "IO")
+
+peaks <- mosaicsPeak(fit)
+
+# access peaks using the print() method
+head(print(peaks))
+peaks_df <- print(peaks)
+
+# convert peaks from data frame to GRanges
+# first we need to rename the chromosome, start, and end columns
+names(peaks_df) <- c("seqnames", "start", "end")
+# convert data frame to GRanges
+peaks_gr <- makeGRangesFromDataFrame(peaks_df)
+
+# export peaks as bed files
+export(peaks, type = "bed", filename = paste0("peaks/", basename(chip_file), "_peaks.bed"))
+
 
 
 # Step5: visualization -----------------------------------------------------------
 # Our aim is to visualize the genomic location around a gene, showing the gene model, ChIP-seq signal (read coverage), and peaks called
-
+library(Gviz)
 # first we need to get the genomic coordinate we want to visualize. We are focusing on  gene CCL2, and 3kb upstream of its promoter.
-
 gene_range <- transcripts(src, 
                           filter = ~symbol == "CCL2")
 upstream_3k <- flank(gene_range, width = 3000)
 plot_range <- range(c(gene_range, upstream_3k))
 seqlevels(plot_range) <- "chr17"
 
-p_gene <- autoplot(txdb, which = plot_range)
+atrack <- AnnotationTrack(subsetByOverlaps(peaks_gr, plot_range), 
+                          name = "Peaks",
+                          rotation.title = 3)
+plotTracks(atrack)
+gtrack <- GenomeAxisTrack()
 
-p_signal <- autoplot(sorted_bam_files[[1]], which = plot_range)
+txTr <- GeneRegionTrack(txdb, chromosome = as.character(seqnames(plot_range)), 
+                        start = start(plot_range),  end = end(plot_range), 
+                        name = "gene model", 
+                        transcriptAnnotation = "symbol",
+                        rotation = 90)
+alnTr <- AlignmentsTrack(sorted_bam_files[[2]], chromosome = as.character(seqnames(plot_range)), 
+                         start = start(plot_range),  end = end(plot_range), fill = "orange")
+alnTr2 <- AlignmentsTrack(sorted_bam_files[[1]], chromosome = as.character(seqnames(plot_range)), 
+                         start = start(plot_range),  end = end(plot_range))
+plotTracks(list(gtrack, atrack, txTr, alnTr, alnTr2), type = "coverage")
 
-tks <- tracks(chip_signal = p_signal,
-              gene_model = p_gene)
+plotTracks(txTr)
+
+# An alternative package "ggbio" can be used to plot gene symbols, bam file coverage, and variants. The resulting plots can be easily combined with other ggplot objects for customized plot generation.
+
+# Some example code
+# p_gene <- autoplot(txdb, which = plot_range)
+# 
+# p_signal <- autoplot(sorted_bam_files[[1]], which = plot_range)
+# 
+# tks <- tracks(chip_signal = p_signal,
+#               gene_model = p_gene)
 
