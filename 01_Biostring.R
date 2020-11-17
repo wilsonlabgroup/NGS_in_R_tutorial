@@ -15,13 +15,12 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocMana
 BiocManager::install(c("Biostrings", "GenomicRanges", "GenomicFeatures", "rtracklayer", "org.Hs.eg.db","AnnotationHub","TxDb.Hsapiens.UCSC.hg19.knownGene","Organism.dplyr", "ShortRead","Rsubread","Gviz","mosaics"))
 
 # set working directory
-setwd("~/Dropbox/ccm_tutorial/") # set it to the downloaded "NGS_in_R" directory
+setwd("~/Documents/NGS_in_R_tutorial/") # set it to the downloaded "NGS_in_R_tutorial" directory
 
 
-# introduction to Biostrings --------------------------------------------------------------
-# load libraries
-library(Biostrings)
-# Working with strings in base R or with Biostrings -------------------------------
+
+
+# Working with strings in base R -------------------------------
 
 # creating some DNA sequences consists of TCAG, length between 10-20
 set.seed(1234)
@@ -34,6 +33,9 @@ grep(pattern = "CAC", seqs) # which sequence contains a pattern
 gregexpr("AA", seqs) # find all matching patterns in all strings 
 gsub("AA", "NN", seqs) # string substitution
 
+?grep
+
+# introduction to Biostrings --------------------------------------------------------------
 # Biologically meaningful string manipulation support
 library(Biostrings)
 
@@ -47,7 +49,7 @@ dnaseq <- DNAStringSet(seqs)
 
 # Similar string manipulation methods as in base R
 width(dnaseq) # length of the strings
-subseq(dnaseq, start = 2, end = 5) # subset string
+subseq(dnaseq, start = 3, end = 5) # subset string
 vmatchPattern("AA", dnaseq) # pattern matching
 pmatch_result <- vmatchPattern("CAA", dnaseq, max.mismatch = 1) # more flexible options!
 
@@ -56,7 +58,7 @@ methods(class = "XStringSet")
 
 reverseComplement(dnaseq) # get the reverseComplement sequences 
 letterFrequency(dnaseq, "GC", as.prob = TRUE) # get letter frequencies
-translate(dnaseq) # translate DNA to aa
+translate(dnaseq) # translate DNA to AA
 
 # trim left/right flanking patterns  
 dnaseq_rpattern <- DNAStringSet(paste0(dnaseq, "AATTA"))
@@ -67,7 +69,7 @@ trimLRPatterns(Rpattern = "AATTA", subject = dnaseq_rpattern)
 rnaseq <- RNAStringSet(dnaseq)
 rnaseq
 alphabet(rnaseq)
-
+alphabet(dnaseq)
 
 
 

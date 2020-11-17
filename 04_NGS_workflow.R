@@ -112,12 +112,15 @@ if(!file.exists("peaks")){
   dir.create("peaks")  
 }
 
+# specify parameters
 fragment_length <- 200
 bin_size <- 200
 
+# We will use one ChIP experiment file and one corresponding input (control) file
 input_file <- sorted_bam_files[[1]]
 chip_file <- sorted_bam_files[[2]]
 
+# First, we construct bins across regions covered in our ChIP and input files
 constructBins(infile = chip_file, 
               fileFormat = "bam",
               outfileLoc = "peaks",
@@ -130,14 +133,17 @@ constructBins(infile = input_file,
               fragLen = fragment_length,
               binSize = bin_size)
 
-
+# get the names of these bin files
 chip_bin_count_file <- paste0("peaks/", basename(chip_file),"_fragL",fragment_length,"_bin",bin_size,".txt")
 input_bin_count_file <- paste0("peaks/", basename(input_file),"_fragL",fragment_length,"_bin",bin_size,".txt") 
 
+# count numbers of reads mapping to each bin
 bin_count <- readBins(type = c("chip", "input"), fileName = c(chip_bin_count_file, input_bin_count_file))
 
+# fit the "mosaics" model
 fit <- mosaicsFit(bin_count, analysisType = "IO")
 
+# finding peaks (with default parameters)
 peaks <- mosaicsPeak(fit)
 
 # access peaks using the print() method
@@ -165,24 +171,35 @@ upstream_3k <- flank(gene_range, width = 3000)
 plot_range <- range(c(gene_range, upstream_3k))
 seqlevels(plot_range) <- "chr17"
 
+# buiding tracks
+# build an annotation track to show peak coordinates 
 atrack <- AnnotationTrack(subsetByOverlaps(peaks_gr, plot_range), 
                           name = "Peaks",
                           rotation.title = 3)
+# plot the track using "plotTracks" function
 plotTracks(atrack)
+
+# generate a genomic axis
 gtrack <- GenomeAxisTrack()
 
+# generate a gene model track from TxDb 
 txTr <- GeneRegionTrack(txdb, chromosome = as.character(seqnames(plot_range)), 
                         start = start(plot_range),  end = end(plot_range), 
                         name = "gene model", 
                         transcriptAnnotation = "symbol",
                         rotation = 90)
+
+# generate alignment track for the ChIP sample
 alnTr <- AlignmentsTrack(sorted_bam_files[[2]], chromosome = as.character(seqnames(plot_range)), 
-                         start = start(plot_range),  end = end(plot_range), fill = "orange")
+                         start = start(plot_range),  end = end(plot_range), fill = "orange", name = "RelA_ChIP")
+# generate alignment track for the Input sample
 alnTr2 <- AlignmentsTrack(sorted_bam_files[[1]], chromosome = as.character(seqnames(plot_range)), 
-                         start = start(plot_range),  end = end(plot_range))
+                         start = start(plot_range),  end = end(plot_range), name = "Input")
+
+# plot all tracks together 
 plotTracks(list(gtrack, atrack, txTr, alnTr, alnTr2), type = "coverage")
 
-plotTracks(txTr)
+
 
 # An alternative package "ggbio" can be used to plot gene symbols, bam file coverage, and variants. The resulting plots can be easily combined with other ggplot objects for customized plot generation.
 

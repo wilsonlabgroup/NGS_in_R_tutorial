@@ -74,7 +74,7 @@ ol # a Hits object containing the index pairing for the query set and the subjec
 # use from() to get query set index, use to() to get subject set index
 # or transform Hits objects to a data frame and subset 
 
-peaks_ol_promoters <- peak_set1[from(ol)]
+peaks_ol_promoters <- peak_set1[from(ol)] # to(ol)
 peaks_ol_promoters <- peak_set1[as.data.frame(ol)$queryHits]
 
 # get metadata from "prmoters" and add them to overlapping peaks

@@ -8,15 +8,9 @@
 ####################################################################
 
 
-# Install and load packages -----------------------------------------------
-library(org.Hs.eg.db)
-
-library(AnnotationHub)
-
-
 # AnnotationDbi: orgDb and TxDb -------------------------------------------
 
-# OrgDb: Organism level, gene centric, stores mapping between identifiers an dother information.
+# OrgDb: Organism level, gene centric, stores mapping between identifiers and other information.
 library(org.Hs.eg.db)
 
 # Methods for AnnotationDb object
@@ -38,19 +32,20 @@ ensembl_to_symbol <- mapIds(org.Hs.eg.db,
        keytype = "ENSEMBL",
        column = "SYMBOL")
 
-# TxDb: transcript oriented, maps betwwn genes and transcripts, and their genomic intervals
+# TxDb: transcript oriented, maps between genes and transcripts, and their genomic intervals
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 
 # Exercise: use columns() and keytypes() to explore the txdb object
 #           use select to obtain the transcript name and genomic locations of a few genes
 
+
 # use select() txdb
 some_genes <- keys(txdb, keytype = "GENEID")[100:105]
 select(txdb, 
        keys = some_genes,
        keytype = "GENEID",
-       columns = c("GENEID","TXNAME","TXCHROM","TXSTART","TXEND","TXSTART"))
+       columns = c("GENEID","TXNAME","TXCHROM","TXSTART","TXEND","TXSTRAND"))
 
 # txdb specific methods using the GenomicFeatures package
 
@@ -91,7 +86,7 @@ gene_prom$gene_symbol <- temp[unlist(gene_prom$gene_id)]
 # https://bioconductor.org/packages/release/bioc/vignettes/GenomicFeatures/inst/doc/GenomicFeatures.pdf
 
 # In addition, EnsDb packages provides ensembl centric genes annotations (gene name, id, transcripts, location, biotype etc.) and can be access using the same select() method. 
-
+# https://bioconductor.org/packages/release/bioc/html/ensembldb.html
 
 # organism.dplyr ----------------------------------------------------------
 # Since OrgDb and TxDb contain different information, it is bothersome to match between the two packages. Organism.dplyr makes a sqlite database of a organism from its corresponding orgDb and TxDb, queries both databases and merges the results, making it easier to get all information from "one resource". 
@@ -135,7 +130,7 @@ chr17_promoters <- promoters(transcripts(src,
                              filter = ~tx_chrom == "chr17",
                              columns = c("symbol")),
                             upstream = 3000,
-                            downstream = 3000,)
+                            downstream = 3000)
 
 # 3. dplyr methods 
 # count the number of transcripts for each gene on chr22
@@ -188,11 +183,13 @@ getSeq(Hsapiens, chr17_promoters)
 # AnnotationHub -----------------------------------------------------------
 # A client interface to abundant resources stored at the AnnotationHub web service 
 
+library(AnnotationHub)
 # initiate an AnnotationHub instance
 ah <- AnnotationHub()
 
 # use [] to get information about a specific dataset
 ah[1000]
+
 
 # explore 
 unique(ah$dataprovider)
@@ -220,9 +217,7 @@ peak_set2 <- h3k27ac_brain_peak[[target_ids[2]]]
 # or use display
 display(h3k27ac_brain_peak)
 
-# retrieve a specific dataset 
-h3k27ac_E067 <- h3k27ac_brain_peak[["AH29356"]]
-h3k27ac_E068 <- h3k27ac_brain_peak[["AH29363"]]
+
 
 
 
