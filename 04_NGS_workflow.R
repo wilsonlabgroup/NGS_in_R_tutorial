@@ -56,7 +56,7 @@ browseURL(report(qa_summary))
 
 # Before alignment, we need to generate an index for the corresponding genome. Each aligner requires a different index. We create a directory to store the index files
 
-if(!file.exists("index")){
+if(!dir.exists("index")){
   dir.create("index")  
 }
 
@@ -69,7 +69,7 @@ buildindex(basename="index/hg19_chr17_index",
 # Step3: alignment  -------------------------------------------------------
 
 # create a directory for alignment outputs
-if(!file.exists("aln")){
+if(!dir.exists("aln")){
   dir.create("aln")  
 }
 
@@ -103,12 +103,14 @@ library(GenomicAlignments)
 bamfile <- "aln/RelA_chip_rep1.bam"
 alignment <- readGAlignments(bamfile)
 
+flags <- scanBamFlag(isSecondaryAlignment = F)
+alignment <- readGAlignments(bamfile, param = ScanBamParam(flag = flags, what = "seq"))
 
 # Step4: peak calling -----------------------------------------------------
 library(mosaics)
 
 # create a directory for alignment outputs
-if(!file.exists("peaks")){
+if(!dir.exists("peaks")){
   dir.create("peaks")  
 }
 
