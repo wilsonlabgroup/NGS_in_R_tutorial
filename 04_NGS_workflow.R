@@ -62,7 +62,7 @@ if(!dir.exists("index")){
 
 # building index. For this tutorial, we are only building an index of hg19 chromosome 17, using the sequence we retrieved in the previous session
 buildindex(basename="index/hg19_chr17_index",
-           reference="hg19_chr17.fasta.gz", 
+           reference="data/hg19_chr17.fasta.gz", 
            gappedIndex = TRUE) # use gappedIndex to reduce computation resources needed
 
 
