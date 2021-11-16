@@ -1,6 +1,6 @@
 ####################################################################
 # CCM bioinfo tutorial -- NGS analysis in R
-# 2020.11.17
+# 2021.11.15
 # Part 1: Biostrings in R
 # Author: Huayun Hou (huayun.hou@sickkids.ca)
 # Resource: 
@@ -50,7 +50,8 @@ dnaseq <- DNAStringSet(seqs)
 # Similar string manipulation methods as in base R
 width(dnaseq) # length of the strings
 subseq(dnaseq, start = 3, end = 5) # subset string
-vmatchPattern("AA", dnaseq) # pattern matching
+matchPattern("AA", dnaseq[[1]]) # pattern matching for a single DNAstring
+vmatchPattern("AA", dnaseq) # pattern matching for multiple DNAstrings
 pmatch_result <- vmatchPattern("CAA", dnaseq, max.mismatch = 1) # more flexible options!
 
 # Various methods specific to biological strings!
