@@ -101,8 +101,10 @@ indexBam(sorted_bam_files)
 
 library(GenomicAlignments)
 bamfile <- "aln/RelA_chip_rep1.bam"
+# read in alignment 
 alignment <- readGAlignments(bamfile)
 
+# filter alignment 
 flags <- scanBamFlag(isSecondaryAlignment = F)
 alignment <- readGAlignments(bamfile, param = ScanBamParam(flag = flags, what = "seq"))
 
@@ -167,11 +169,11 @@ export(peaks, type = "bed", filename = paste0("peaks/", basename(chip_file), "_p
 # Our aim is to visualize the genomic location around a gene, showing the gene model, ChIP-seq signal (read coverage), and peaks called
 library(Gviz)
 # first we need to get the genomic coordinate we want to visualize. We are focusing on  gene CCL2, and 3kb upstream of its promoter.
-gene_range <- transcripts(src, 
+gene_range <- transcripts(edb, 
                           filter = ~symbol == "CCL2")
 upstream_3k <- flank(gene_range, width = 3000)
 plot_range <- range(c(gene_range, upstream_3k))
-seqlevels(plot_range) <- "chr17"
+seqlevelsStyle(plot_range) <- "UCSC"
 
 # buiding tracks
 # build an annotation track to show peak coordinates 
@@ -190,6 +192,7 @@ txTr <- GeneRegionTrack(txdb, chromosome = as.character(seqnames(plot_range)),
                         name = "gene model", 
                         transcriptAnnotation = "symbol",
                         rotation = 90)
+
 
 # generate alignment track for the ChIP sample
 alnTr <- AlignmentsTrack(sorted_bam_files[[2]], chromosome = as.character(seqnames(plot_range)), 
