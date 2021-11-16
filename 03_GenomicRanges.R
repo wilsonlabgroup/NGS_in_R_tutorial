@@ -27,7 +27,7 @@ pmatch_result[[1]]
 my_promoters[1:3] # subset by index, only one dimension 
 my_promoters[2:5, "symbol"] # subset by metadata column name
 names(my_promoters) <- my_promoters$tx_name # naming GRanges
-my_promoters["uc002frq.3"] # subset by name 
+my_promoters["ENST00000343572"] # subset by name 
 
 # access ranges elements
 seqnames(my_promoters)
@@ -36,8 +36,8 @@ strand(my_promoters)
 
 
 # get metadata (columns beyond seqnames, ranges, and strand)
-mcols(my_promoters) # its a data frame
-# change metadata; removed "tx_id" column
+mcols(my_promoters) # it is a data frame
+# change metadata; keeping only "tx_name" and "symbol" columns
 mcols(my_promoters) <- mcols(my_promoters)[, c("tx_name","symbol")]
 # metadata columns can also be accessed using $
 my_promoters$tx_name
@@ -46,7 +46,7 @@ my_promoters$tx_name
 width(my_promoters)
 length(my_promoters) # numbers of ranges in an GRanges object
 seqlevels(my_promoters) # show all chromosomes stored in the object
-seqlevels(my_promoters) <- "chr17" # since we only have data on one chromosome, we can change the seqlevels
+
 
 
 # Useful interval manipulation methods
@@ -66,6 +66,11 @@ coverage(my_promoters) # get the coverage/degress of overlap along the sequence
 # 3. between-range methods: calculates the relationships between two GRanges objects, for example, overlaps
 
 # use findOverlaps to find overlaps between a query set (first) and a subject set (second)
+
+# change seqlevels to "UCSC style"
+seqlevelsStyle(chr17_promoters) <- "UCSC"
+
+# find overlaps
 ol <- findOverlaps(peak_set1, chr17_promoters)
 ol # a Hits object containing the index pairing for the query set and the subject set 
 
